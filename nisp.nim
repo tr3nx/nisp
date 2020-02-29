@@ -125,8 +125,50 @@ proc parser(ts: var seq[Token]): TreeNode =
     else:
       return TreeNode(kind: String, value: ts.shift.value)
 
+proc generate(ast: TreeNode): string =
+  case ast.kind
+  of Procedure:
+    result.add "("
+    var tmp: string
+    for (i, arg) in ast.rand.pairs:
+      tmp.add generate(arg)
+      if i < ast.rand.len - 1:
+        tmp.add " "
 
-var code = "((lambda (x) (* 52 91)) 22 123)"
+    result.add generate(ast.rator) & " " & tmp
+
+    result.add ")"
+
+  of Quote:
+    result.add "(quote "
+    result.add ast.value
+    result.add ")"
+
+  of Lambda:
+    result.add "(lambda ("
+    for (i, arg) in ast.vars.pairs:
+      result.add arg
+      if i < ast.vars.len - 1:
+        result.add " "
+
+    result.add ") "
+    result.add generate(ast.body)
+    result.add ")"
+
+  of Float:
+    result.add $(ast.floatValue)
+
+  of Integer:
+    result.add $(ast.intValue)
+
+  of Symbol:
+    result.add ast.value
+
+  of String:
+    result.add ast.value
+
+
+var code = "((lambda (x) (* 52 91)) (quote 22) (+ 1 2 (% 9 1 9 5)))"
 
 var tokens = tokenize(code, @[
   TokenType(kind: tkOparen,  reg: re"(\()"),
@@ -141,4 +183,8 @@ var tokens = tokenize(code, @[
 #   echo repr(t)
 
 var ast = parser(tokens)
-echo repr(ast)
+
+var generated = generate(ast)
+echo "original:  " & code
+echo "generated: " & generated
+echo "matching: " & $(generated == code)
