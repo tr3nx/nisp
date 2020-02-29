@@ -63,9 +63,7 @@ proc tokenize(inputs: string, ts: seq[TokenType]): seq[Token] =
         result.add Token(kind: t.kind, value: matches[0])
         break
 
-    if i > ts.len:
-      echo "syntax error"
-      break
+    if i > ts.len: quit("syntax error", -1)
     else: i = 0
 
 proc parser(ts: var seq[Token]): TreeNode =
