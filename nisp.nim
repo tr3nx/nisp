@@ -81,9 +81,11 @@ proc parser(ts: var seq[Token]): TreeNode =
       while ts[0].kind != tkCparen:
         vars.add ts.shift.value
 
-      discard ts.shift # consume cparen of args
+      discard ts.shift # consume cparen
+
       var body = parser(ts)
-      discard ts.shift # consume cparen of lambda
+
+      discard ts.shift # consume cparen
 
       return TreeNode(kind: Lambda, vars: vars, body: body)
 
@@ -107,12 +109,13 @@ proc parser(ts: var seq[Token]): TreeNode =
     else: # parse procedure
       discard ts.shift # consume oparen
 
-      var rator = if ts[0].kind == tkOparen: parser(ts)
-                  else: TreeNode(kind: String, value: ts.shift.value)
+      var rator = parser(ts)
 
       var rand: seq[TreeNode]
       while ts[0].kind != tkCparen:
         rand.add parser(ts)
+
+      discard ts.shift # consume cparen
 
       return TreeNode(kind: Procedure, rator: rator, rand: rand)
 
@@ -125,7 +128,7 @@ proc parser(ts: var seq[Token]): TreeNode =
       return TreeNode(kind: String, value: ts.shift.value)
 
 
-var code = "((lambda (x) (- x 64) 22)"
+var code = "((lambda (x) (* 52 91)) 22 123)"
 
 var tokens = tokenize(code, @[
   TokenType(kind: tkOparen,  reg: re"(\()"),
@@ -136,7 +139,7 @@ var tokens = tokenize(code, @[
   TokenType(kind: tkSymbol,  reg: re"([a-zA-Z0-9\+\=!^%*-/]+)"),
 ])
 
-# for t in tokens.reversed:
+# for t in tokens:
 #   echo repr(t)
 
 var ast = parser(tokens)
