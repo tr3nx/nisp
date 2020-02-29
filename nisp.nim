@@ -6,6 +6,7 @@ type
   TokenKind = enum
     tkOparen,  # (
     tkCparen,  # )
+    tkFloat,   # 5.5
     tkInteger, # 5
     tkSymbol,  # +
     tkString,  # "str"
@@ -22,6 +23,7 @@ type
     Procedure, # (+ 1 2)
     Quote,     # '(1 2 3)
     Lambda,    # (lambda (x) (+ x 1))
+    Float,     # 5.5
     Integer,   # 5
     String,    # "str"
     Symbol     # +
@@ -36,6 +38,7 @@ type
       body: TreeNode
     of Quote, String, Symbol: value: string
     of Integer: intValue: int
+    of Float: floatValue: float
 
 proc shift[T](s: var seq[T]): T {.inline, noSideEffect.} =
   result = s[0]
@@ -73,7 +76,7 @@ proc parser(ts: var seq[Token]): TreeNode =
       discard ts.shift # consume lambda symbol
       discard ts.shift # consume oparen of args
 
-      # parse lambda args 
+      # parse lambda args
       var vars: seq[string]
       while ts[0].kind != tkCparen:
         vars.add ts.shift.value
@@ -114,18 +117,21 @@ proc parser(ts: var seq[Token]): TreeNode =
       return TreeNode(kind: Procedure, rator: rator, rand: rand)
 
   else: # parse atomic value
-    if ts[0].kind == tkInteger: 
+    if ts[0].kind == tkInteger:
       return TreeNode(kind: Integer, intValue: parseInt(ts.shift.value))
+    elif ts[0].kind == tkFloat:
+      return TreeNode(kind: Float, floatValue: parseFloat(ts.shift.value))
     else:
       return TreeNode(kind: String, value: ts.shift.value)
 
 
-var code = "(+ 1 2)"
+var code = "((lambda (x) (+ x (quote 10.1)) (lambda (y) (* 5.2 (+ 12.6 9.13))))"
 
 var tokens = tokenize(code, @[
   TokenType(kind: tkOparen,  reg: re"(\()"),
   TokenType(kind: tkCparen,  reg: re"(\))"),
-  TokenType(kind: tkInteger, reg: re"([\-]?[0-9]+(?:[\.]?[0-9]+)?)"),
+  TokenType(kind: tkFloat,   reg: re"([\-]?[0-9]+[\.][0-9]+)"),
+  TokenType(kind: tkInteger, reg: re"([\-]?[0-9]+)"),
   TokenType(kind: tkString,  reg: re"""(\"[^\"]*\")"""),
   TokenType(kind: tkSymbol,  reg: re"([a-zA-Z0-9\+\=!^%*-/]+)"),
 ])
