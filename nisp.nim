@@ -48,6 +48,7 @@ proc tokenize(inputs: string, ts: seq[TokenType]): seq[Token] =
   var pos: int
   var part: string
   var i: int
+  var matches: array[1, string]
 
   while pos < inputs.len:
     part = inputs[pos..<inputs.len]
@@ -57,7 +58,6 @@ proc tokenize(inputs: string, ts: seq[TokenType]): seq[Token] =
 
     for t in ts:
       inc(i)
-      var matches: array[1, string]
       if part.match(t.reg, matches):
         pos = pos + matches[0].len
         result.add Token(kind: t.kind, value: matches[0])
