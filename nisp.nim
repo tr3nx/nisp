@@ -26,7 +26,7 @@ type
     Float,     # 5.5
     Integer,   # 5
     String,    # "str"
-    Symbol     # +
+    Symbol,    # +
 
   TreeNode = ref object
     case kind: TreeNodeKind
@@ -125,13 +125,13 @@ proc parser(ts: var seq[Token]): TreeNode =
       return TreeNode(kind: String, value: ts.shift.value)
 
 
-var code = "((lambda (x) (+ x (quote 10.1)) (lambda (y) (* 5.2 (+ 12.6 9.13))))"
+var code = "((lambda (x) (- x 64) 22)"
 
 var tokens = tokenize(code, @[
   TokenType(kind: tkOparen,  reg: re"(\()"),
   TokenType(kind: tkCparen,  reg: re"(\))"),
-  TokenType(kind: tkFloat,   reg: re"([\-]?[0-9]+[\.][0-9]+)"),
-  TokenType(kind: tkInteger, reg: re"([\-]?[0-9]+)"),
+  TokenType(kind: tkFloat,   reg: re"(\-?[0-9]+\.[0-9]+)"),
+  TokenType(kind: tkInteger, reg: re"(\-?[0-9]+)"),
   TokenType(kind: tkString,  reg: re"""(\"[^\"]*\")"""),
   TokenType(kind: tkSymbol,  reg: re"([a-zA-Z0-9\+\=!^%*-/]+)"),
 ])
