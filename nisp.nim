@@ -21,8 +21,8 @@ type
 
   TreeNodeKind = enum
     Procedure, # (+ 1 2)
-    Quote,     # '(1 2 3)
     Lambda,    # (lambda (x) (+ x 1))
+    Quote,     # '(1 2 3)
     Float,     # 5.5
     Integer,   # 5
     String,    # "str"
@@ -118,12 +118,9 @@ proc parser(ts: var seq[Token]): TreeNode =
       return TreeNode(kind: Procedure, rator: rator, rand: rand)
 
   else: # parse atomic value
-    if ts[0].kind == tkInteger:
-      return TreeNode(kind: Integer, intValue: parseInt(ts.shift.value))
-    elif ts[0].kind == tkFloat:
-      return TreeNode(kind: Float, floatValue: parseFloat(ts.shift.value))
-    else:
-      return TreeNode(kind: String, value: ts.shift.value)
+    if ts[0].kind == tkInteger: return TreeNode(kind: Integer, intValue: parseInt(ts.shift.value))
+    if ts[0].kind == tkFloat: return TreeNode(kind: Float, floatValue: parseFloat(ts.shift.value))
+    return TreeNode(kind: String, value: ts.shift.value)
 
 proc generate(ast: TreeNode): string =
   case ast.kind
@@ -134,15 +131,7 @@ proc generate(ast: TreeNode): string =
       tmp.add generate(arg)
       if i < ast.rand.len - 1:
         tmp.add " "
-
-    result.add generate(ast.rator) & " " & tmp
-
-    result.add ")"
-
-  of Quote:
-    result.add "(quote "
-    result.add ast.value
-    result.add ")"
+    result.add generate(ast.rator) & " " & tmp & ")"
 
   of Lambda:
     result.add "(lambda ("
@@ -150,25 +139,16 @@ proc generate(ast: TreeNode): string =
       result.add arg
       if i < ast.vars.len - 1:
         result.add " "
+    result.add ") " & generate(ast.body) & ")"
 
-    result.add ") "
-    result.add generate(ast.body)
-    result.add ")"
-
-  of Float:
-    result.add $(ast.floatValue)
-
-  of Integer:
-    result.add $(ast.intValue)
-
-  of Symbol:
-    result.add ast.value
-
-  of String:
-    result.add ast.value
+  of Quote: result.add "(quote " & ast.value & ")"
+  of Float: result.add $(ast.floatValue)
+  of Integer: result.add $(ast.intValue)
+  of Symbol: result.add ast.value
+  of String: result.add ast.value
 
 
-var code = "((lambda (x) (* 52 91)) (quote 22) (+ 1 2 (% 9 1 9 5)))"
+var code = "((lambda (x y) (* x y)) (quote (+ 22 22)) (+ 1 2 (% 9 1 9 5)))"
 
 var tokens = tokenize(code, @[
   TokenType(kind: tkOparen,  reg: re"(\()"),
@@ -176,7 +156,7 @@ var tokens = tokenize(code, @[
   TokenType(kind: tkFloat,   reg: re"(\-?[0-9]+\.[0-9]+)"),
   TokenType(kind: tkInteger, reg: re"(\-?[0-9]+)"),
   TokenType(kind: tkString,  reg: re"""(\"[^\"]*\")"""),
-  TokenType(kind: tkSymbol,  reg: re"([a-zA-Z0-9\+\=!^%*-/]+)"),
+  TokenType(kind: tkSymbol,  reg: re"([a-zA-Z0-9+=!^%*-/`]+)"),
 ])
 
 # for t in tokens:
