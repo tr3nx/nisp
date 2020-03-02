@@ -8,8 +8,8 @@ type
     tkCparen,  # )
     tkFloat,   # 5.5
     tkInteger, # 5
-    tkSymbol,  # +
     tkString,  # "str"
+    tkSymbol,  # +
 
   TokenType = object
     kind: TokenKind
@@ -129,12 +129,12 @@ proc generate(ast: TreeNode): string =
   case ast.kind
   of Procedure:
     result.add "("
-    var tmp: string
+    var rands: string
     for (i, arg) in ast.rand.pairs:
-      tmp.add generate(arg)
+      rands.add generate(arg)
       if i < ast.rand.len - 1:
-        tmp.add " "
-    result.add generate(ast.rator) & " " & tmp & ")"
+        rands.add " "
+    result.add generate(ast.rator) & " " & rands & ")"
 
   of Lambda:
     result.add "(lambda ("
@@ -147,8 +147,8 @@ proc generate(ast: TreeNode): string =
   of Quote: result.add "(quote " & ast.value & ")"
   of Float: result.add $(ast.floatValue)
   of Integer: result.add $(ast.intValue)
-  of Symbol: result.add ast.value
   of String: result.add ast.value
+  of Symbol: result.add ast.value
 
 proc eval(ast: TreeNode): string =
   case ast.kind
@@ -163,8 +163,8 @@ proc eval(ast: TreeNode): string =
   of Quote: return ast.value
   of Float: return $(ast.floatValue)
   of Integer: return $(ast.intValue)
-  of Symbol: return ast.value
   of String: return ast.value
+  of Symbol: return ast.value
 
 
 # var code = "((lambda (x y) (* x y)) (quote (+ 22 22)) (+ 1 2 (% 9 1 9 5)))"
