@@ -1,6 +1,6 @@
 # NISP - Lisp in Nim
 
-import strutils, re
+import strutils, sequtils, re
 
 type
   TokenKind = enum
@@ -39,6 +39,9 @@ type
     of Quote, String, Symbol: value: string
     of Integer: intValue: int
     of Float: floatValue: float
+
+# Built-in procs
+proc add(a, b: string): string = a & b
 
 proc shift[T](s: var seq[T]): T {.inline, noSideEffect.} =
   result = s[0]
@@ -147,8 +150,25 @@ proc generate(ast: TreeNode): string =
   of Symbol: result.add ast.value
   of String: result.add ast.value
 
+proc eval(ast: TreeNode): string =
+  case ast.kind
+  of Procedure:
+    var args = ast.rand.map(eval)
+    # come up with dynamic dispatch, func ptr?
 
-var code = "((lambda (x y) (* x y)) (quote (+ 22 22)) (+ 1 2 (% 9 1 9 5)))"
+  of Lambda: discard
+    # for arg in ast.vars:
+    # eval(ast.body)
+
+  of Quote: return ast.value
+  of Float: return $(ast.floatValue)
+  of Integer: return $(ast.intValue)
+  of Symbol: return ast.value
+  of String: return ast.value
+
+
+# var code = "((lambda (x y) (* x y)) (quote (+ 22 22)) (+ 1 2 (% 9 1 9 5)))"
+var code = "(add 1 2)"
 
 var tokens = tokenize(code, @[
   TokenType(kind: tkOparen,  reg: re"(\()"),
@@ -168,3 +188,6 @@ var generated = generate(ast)
 echo "original:  " & code
 echo "generated: " & generated
 echo "matching: " & $(generated == code)
+
+var result = eval(ast)
+echo result
