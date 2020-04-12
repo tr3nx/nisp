@@ -1,6 +1,6 @@
 # NISP - Lisp in Nim
 
-import strutils, sequtils, re
+import strutils, sequtils, re, algorithm
 
 type
   TokenKind = enum
@@ -151,8 +151,42 @@ proc generate(ast: TreeNode): string =
   of String: result.add ast.value
   of Symbol: result.add ast.value
 
+proc bytecode(ast: TreeNode): string =
+  case ast.kind
+  of Procedure:
+    var tmp: string
+    for (i, arg) in ast.rand.reversed().pairs:
+      tmp.add " " & bytecode(arg)
+      if i < ast.rand.len - 1:
+        tmp.add ","
+    result.add tmp & ", " & bytecode(ast.rator)
+    if ast.rand.len > 2:
+      result.add ", " & bytecode(ast.rator)
+
+  of Lambda: discard
+
+  of Quote: discard
+
+  of Float: discard
+
+  of Integer: result.add "10, " & $ast.intValue
+
+  of Symbol:
+    var op = ast.value
+    if   op == "+": result.add 2
+    elif op == "-": result.add 3
+    elif op == "*": result.add 4
+    elif op == "/": result.add 5
+    elif op == "%": result.add 6
+    elif op == ">": result.add 7
+    elif op == "<": result.add 8
+    elif op == "=": result.add 9
+    else: result.add op
+
+  of String: result.add ast.value
+
 # var code = "((lambda (x y) (* x y)) (quote (+ 22 22)) (+ 1 2 (% 9 1 9 5)))"
-var code = "(+ 1 2)"
+var code = "(+ 1 2 (+ 3 4))"
 
 var tokens = tokenize(code, @[
   TokenType(kind: tkOparen,  reg: re"(\()"),
@@ -173,3 +207,6 @@ var generated = generate(ast)
 echo "original:  " & code
 echo "generated: " & generated
 echo "matching: " & $(generated == code)
+
+var bytes = bytecode(ast)
+echo "bytes: " & bytes
