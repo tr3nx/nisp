@@ -123,6 +123,7 @@ proc parser(ts: var seq[Token]): TreeNode =
   else: # parse atomic value
     if ts[0].kind == tkInteger: return TreeNode(kind: Integer, intValue: parseInt(ts.shift.value))
     if ts[0].kind == tkFloat: return TreeNode(kind: Float, floatValue: parseFloat(ts.shift.value))
+    if ts[0].kind == tkSymbol: return TreeNode(kind: Symbol, value: ts.shift.value)
     return TreeNode(kind: String, value: ts.shift.value)
 
 proc generate(ast: TreeNode): string =
@@ -168,7 +169,7 @@ proc eval(ast: TreeNode): string =
 
 
 # var code = "((lambda (x y) (* x y)) (quote (+ 22 22)) (+ 1 2 (% 9 1 9 5)))"
-var code = "(add 1 2)"
+var code = "(+ 1 2)"
 
 var tokens = tokenize(code, @[
   TokenType(kind: tkOparen,  reg: re"(\()"),
@@ -183,6 +184,7 @@ var tokens = tokenize(code, @[
 #   echo repr(t)
 
 var ast = parser(tokens)
+# echo repr(ast)
 
 var generated = generate(ast)
 echo "original:  " & code
