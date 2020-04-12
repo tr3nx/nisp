@@ -151,23 +151,6 @@ proc generate(ast: TreeNode): string =
   of String: result.add ast.value
   of Symbol: result.add ast.value
 
-proc eval(ast: TreeNode): string =
-  case ast.kind
-  of Procedure:
-    var args = ast.rand.map(eval)
-    # come up with dynamic dispatch, func ptr?
-
-  of Lambda: discard
-    # for arg in ast.vars:
-    # eval(ast.body)
-
-  of Quote: return ast.value
-  of Float: return $(ast.floatValue)
-  of Integer: return $(ast.intValue)
-  of String: return ast.value
-  of Symbol: return ast.value
-
-
 # var code = "((lambda (x y) (* x y)) (quote (+ 22 22)) (+ 1 2 (% 9 1 9 5)))"
 var code = "(+ 1 2)"
 
@@ -190,6 +173,3 @@ var generated = generate(ast)
 echo "original:  " & code
 echo "generated: " & generated
 echo "matching: " & $(generated == code)
-
-var result = eval(ast)
-echo result
